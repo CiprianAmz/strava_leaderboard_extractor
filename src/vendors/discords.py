@@ -10,6 +10,7 @@ class TomitaBiciclistul(Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bobite_replies = self.get_replies('bobite.txt')
+        self.caca_replies = self.get_replies('cacacios.txt')
 
     def get_replies(self, file_name):
         with open('replies/' + file_name, 'r') as file:
@@ -33,8 +34,9 @@ class TomitaBiciclistul(Client):
         if message.content.startswith('!ping'):
             await message.reply('Pong!', mention_author=True)
 
-        if message.content.startswith('!treats'):
-            await message.reply('Primesc doar un treat? Am fost baiat cuminte!!!', mention_author=True)
+        if message.content.startswith('!cacacios'):
+            random_reply = random.choice(self.caca_replies)
+            await message.reply(random_reply, mention_author=True)
 
         if message.content.startswith('!pupic'):
             if message.author.id == owner_id:
