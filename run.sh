@@ -3,6 +3,6 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 pip3 install -r requirements.txt
-python3 src/strava_leaderboard_extractor.py
+python3 src/vendors/strava.py
 
 deactivate
