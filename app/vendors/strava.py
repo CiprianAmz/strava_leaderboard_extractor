@@ -1,5 +1,5 @@
 from stravalib.client import Client
-from src.utils.config import config
+from app.config.config import config
 import datetime
 
 
