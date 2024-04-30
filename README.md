@@ -1,7 +1,11 @@
-### Strava Leaderboard Extractor
+### Strava Leaderboard Extractor (Tomâțul Biciclistu)
 
-Simple leaderboard extractor for Strava clubs using stravalib.
+#### What is this?
 
-Step 1: Complete `strava_extractor_config.json` with your configuration. Access https://www.strava.com/settings/api to retrieve your API_KEY
+This is a simple leaderboard extractor for Strava clubs using stravalib. You can also hook it to a Discord bot to send
+updates to your server - or respond to different commands. (like `!leaderboard` `!stats` etc.)
 
-Step 2: `./run.sh`
+#### How to use?
+
+1. Complete `strava_extractor_config.json` with your configuration. Access https://www.strava.com/settings/api to retrieve your API_KEY
+2. Run: `./run.sh`

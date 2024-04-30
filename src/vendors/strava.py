@@ -1,18 +1,13 @@
 from stravalib.client import Client
+from src.utils.config import config
 import datetime
-import json
 
-def load_config():
-    with open("strava_extractor_config.json") as f:
-        return dict(json.load(f))
 
 def print_sorted_leaderboard(dict_leaderboard, print_func=lambda key, val: print(f"{key}: {val}")):
     for key, val in dict(sorted(dict_leaderboard.items(), key=lambda item: item[1], reverse=True)).items():
         print_func(key, val)
 
 def main():
-    config = load_config()
-
     client = Client(access_token=config["strava_access_token"])
     club_activities = client.get_club_activities(
         club_id=config["strava_club_id"],
