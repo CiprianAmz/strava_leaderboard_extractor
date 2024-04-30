@@ -1,5 +1,5 @@
-from src.utils.config import config
-from src.vendors.discords import tomita
+from app.clients.tomita.tomita_pet import tomita
+from app.config.config import config
 
 DISCORD_TOKEN = config["discord_token"]
 
