@@ -4,6 +4,7 @@ from discord import Intents, Client
 
 from src.utils.logs import tomi_logger
 
+owner_id = 279996271388000256 # Maurice
 
 class TomitaBiciclistul(Client):
     def __init__(self, *args, **kwargs):
@@ -35,6 +36,11 @@ class TomitaBiciclistul(Client):
         if message.content.startswith('!treats'):
             await message.reply('Primesc doar un treat? Am fost baiat cuminte!!!', mention_author=True)
 
+        if message.content.startswith('!pupic'):
+            if message.author.id == owner_id:
+                await message.reply('Frr, frr _sunete de tors_', mention_author=True)
+            else:
+                await message.reply('Nu pot să te pup, nu te cunosc!', mention_author=True)
 
 intents = Intents.default()
 intents.message_content = True
