@@ -4,15 +4,15 @@ from firebase_admin import db
 
 
 class FirebaseClient:
-    def __init__(self, db_url, credential_path):
+    def __init__(self, db_url, db_table, credential_path):
         self.cred = credentials.Certificate(credential_path)
         self.initialized_app = firebase_admin.initialize_app(self.cred, {
             'databaseURL': db_url
         })
-        self.db_ref = db.reference("/activities")
+        self.db_ref = db.reference("/" + db_table)
 
-    def fetch_scores(self):
-        """Fetches scores from Firebase."""
+    def fetch_all(self):
+        """Fetches all entities from Firebase."""
         return self.db_ref.get()
 
     def update_score(self, user_id, score):
