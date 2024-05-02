@@ -3,7 +3,7 @@ import os
 import schedule
 
 from app.config.config import config
-from app.vendors.firebase import FirebaseClient
+from tomita_discord_bot.vendors.firebase import FirebaseClient
 
 
 class LeaderboardRepository:
@@ -11,7 +11,7 @@ class LeaderboardRepository:
         self.firebase_client = FirebaseClient(
             db_url=config.get("firebase_url"),
             db_table="leaderboard",
-            credential_path=os.getcwd() + "/../firebase.json"
+            credential_path=os.getcwd() + "/../firebase_config.json"
         )
 
     def start_scheduler(self) -> None:

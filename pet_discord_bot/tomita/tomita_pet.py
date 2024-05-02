@@ -3,10 +3,10 @@ import random
 
 from discord import Intents, Client as DiscordClient, Embed
 
-from app.clients.tomita.tomita_strava import TomitaStrava
-from app.config.constants import discord_channel_name_to_id
+from tomita_discord_bot.tomita.tomita_strava import TomitaStrava
+from configs.constants import discord_channel_name_to_id
 from app.utils.logs import tomi_logger
-from app.clients.athlete_pet import AthletePet
+from tomita_discord_bot.athlete_pet import AthletePet
 
 
 def get_replies(file_name):

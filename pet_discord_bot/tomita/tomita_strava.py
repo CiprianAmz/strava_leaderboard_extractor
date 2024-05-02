@@ -2,7 +2,7 @@ from humanfriendly import format_timespan
 from stravalib import Client
 
 from app.config.config import config
-from app.config.constants import strava_activity_to_emoji
+from configs.constants import strava_activity_to_emoji
 
 
 class TomitaStrava:

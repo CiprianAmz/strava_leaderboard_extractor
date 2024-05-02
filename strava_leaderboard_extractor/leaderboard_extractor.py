@@ -1,18 +1,21 @@
 from stravalib.client import Client
-from app.config.config import config
+from strava_config import StravaConfig
 import datetime
 
 
-def print_sorted_leaderboard(dict_leaderboard, print_func=lambda key, val: print(f"{key}: {val}")):
-    for key, val in dict(sorted(dict_leaderboard.items(), key=lambda item: item[1], reverse=True)).items():
+def print_sorted_leaderboard(
+    dict_leaderboard, print_func=lambda key, val: print(f"{key}: {val}")
+):
+    for key, val in dict(
+        sorted(dict_leaderboard.items(), key=lambda item: item[1], reverse=True)
+    ).items():
         print_func(key, val)
 
 
-def main():
-    client = Client(access_token=config["strava_access_token"])
+def extract_leaderboard(config: StravaConfig):
+    client = Client(access_token=config.access_token)
     club_activities = client.get_club_activities(
-        club_id=config["strava_club_id"],
-        limit=config.get("activities_limit", None)
+        club_id=config.club_id, limit=config.activities_limit
     )
 
     ranking_moving_time_dict = {}
@@ -45,7 +48,3 @@ def main():
 
     print("\n Distance leaderboard:")
     print_sorted_leaderboard(ranking_distance_dict)
-
-
-if __name__ == "__main__":
-    main()

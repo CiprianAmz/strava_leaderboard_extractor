@@ -1,0 +1,5 @@
+{
+    "activities_limit": 162,
+    "strava_access_token": "<INSERT_ACCESS_TOKEN>",
+    "strava_club_id": "<INSERT_CLUB_ID>"
+}

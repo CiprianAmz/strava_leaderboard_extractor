@@ -2,8 +2,8 @@ import os
 from typing import List
 
 from app.config.config import config
-from app.types.athlete import Athlete
-from app.vendors.firebase import FirebaseClient
+from types.athlete import Athlete
+from tomita_discord_bot.vendors.firebase import FirebaseClient
 
 
 class AthleteRepository:
@@ -11,7 +11,7 @@ class AthleteRepository:
         self.firebase_client = FirebaseClient(
             db_url=config.get("firebase_url"),
             db_table="athletes",
-            credential_path=os.getcwd() + "/../firebase.json"
+            credential_path=os.getcwd() + "/../firebase_config.json"
         )
         self.athletes = self.firebase_client.fetch_athletes()
 
