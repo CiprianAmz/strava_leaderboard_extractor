@@ -50,6 +50,13 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
         embedded_message.add_field(name="Distanță totală", value=strava_stats["distance"], inline=False)
         await channel.send(embed=embedded_message)
 
+    async def __send_startup_message(self, t_activities, t_athletes):
+        channel = self.get_channel(discord_channel_name_to_id['bot_home'])
+        embedded_message = Embed(title="✅ Tomita started", description="🐈 Tomita is running (around the house)!", color=0xFFC0CB)
+        embedded_message.add_field(name="Athletes", value=f"{t_athletes} athletes", inline=False)
+        embedded_message.add_field(name="Activities", value=f"{t_activities} activities", inline=False)
+        await channel.send(embed=embedded_message)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         firebase_client = FirebaseClient(
@@ -71,15 +78,25 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
             '!strava_monthly',
             '!strava_yearly'
         ]
-        self.strava = TomitaStrava(config_json=load_strava_config_from_json(os.path.join(os.path.dirname(__file__), '../../configs/strava_config.json')))
+
+        self.strava = TomitaStrava(
+            config_json=load_strava_config_from_json(
+                os.path.join(os.path.dirname(__file__), '../../configs/strava_config.json')),
+            activity_repo=self.activity_repository,
+            athlete_repo=self.athlete_repository
+        )
 
     async def on_ready(self):
-        athletes = self.athlete_repository.fetch_athletes()
+        athletes = self.athlete_repository.fetch_all()
+        activities = self.activity_repository.fetch_all()
         tomi_logger.info(f'Loaded {len(athletes)} athletes from Firebase')
+        tomi_logger.info(f'Loaded {len(activities)} activities from Firebase')
 
         tomi_logger.info("Tomita is running (around the house)!")
         tomi_logger.info(f'Logged in as {self.user} (ID: {self.user.id})')
         tomi_logger.info('------')
+
+        await self.__send_startup_message(len(activities), len(athletes))
 
     async def on_message(self, message):
         # We do not want the bot to reply to itself
@@ -100,7 +117,8 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
             await self.__playful_commands(message)
 
         if message.content.startswith(tuple(self.commands_strava)):
-            if message.channel.id != discord_channel_name_to_id['sportivii']:
+            if (message.channel.id != discord_channel_name_to_id['sportivii'] and
+                    message.channel.id != discord_channel_name_to_id['bot_home']):
                 await message.reply('Comanda este disponibilă doar pe canalul #🚴🏽-sportivii', mention_author=True)
                 return
             await self.__strava_commands(message)

@@ -4,8 +4,9 @@ from dataclasses import dataclass
 @dataclass
 class Activity:
     athlete_id: str
-    activity_id: str
-    activity_name: str
-    time: int  # in seconds
+    date: str | None
     distance: float  # in kilometers
-    date: str
+    internal_id: str # UUID
+    name: str
+    time: int  # in seconds
+    type: str

@@ -13,16 +13,15 @@ class FirebaseClient:
     @staticmethod
     def fetch_all(db_table: str) -> object:
         """Fetches all entities from Firebase."""
-        print("fetching all entities from Firebase...")
         return db.reference("/" + db_table).get()
 
     @staticmethod
-    def upsert(self, db_table: str, internal_id: str, data: object) -> None:
+    def upsert(db_table: str, internal_id: str, data: object) -> None:
         """Inserts or updates a new entity into Firebase."""
         db.reference("/" + db_table).child(internal_id).set(data)
 
     @staticmethod
-    def delete(self, db_table: str, internal_id: str) -> None:
+    def delete(db_table: str, internal_id: str) -> None:
         """Deletes an entity from Firebase."""
         db.reference("/" + db_table).child(internal_id).delete()
 

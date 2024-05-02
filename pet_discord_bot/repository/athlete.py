@@ -1,8 +1,6 @@
-import os
 from typing import List
 
 from pet_discord_bot.types.athlete import Athlete
-from pet_discord_bot.utils.discord_config import load_discord_config_from_json
 from pet_discord_bot.vendors.firebase import FirebaseClient
 
 
@@ -17,9 +15,16 @@ class AthleteRepository:
         else:
             self.athletes = []
 
-    def fetch_athletes(self) -> List[Athlete]:
+    def fetch_all(self) -> List[Athlete]:
         return self.athletes
 
-    def add_athlete(self, athlete: Athlete) -> None:
+    def add(self, athlete: Athlete) -> None:
         self.athletes.append(athlete)
         self.client.upsert(db_table=self.db_table, internal_id=athlete.internal_id, data=athlete.__dict__)
+
+    def get(self, internal_id: str) -> Athlete:
+        return next((athlete for athlete in self.athletes if athlete.internal_id == internal_id), None)
+
+    def get_by_name(self, first_name: str, last_name: str) -> Athlete or None:
+        return next((athlete for athlete in self.athletes if
+                     athlete.first_name == first_name and athlete.last_name == last_name), None)
