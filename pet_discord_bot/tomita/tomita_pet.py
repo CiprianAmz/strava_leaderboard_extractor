@@ -58,6 +58,14 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
             else:
                 await channel.send(f'✅ Am adăugat {t_added_activities} activități noi în baza de date!')
 
+        if message.content.startswith('!strava_daily'):
+            daily_stats = self.strava.compute_daily_stats()
+            embedded_message = Embed(title="Daily Stats", description="Statisticile zilnice", color=0x00ff00)
+            embedded_message.add_field(name="Numar de activități", value=daily_stats["count"], inline=False)
+            embedded_message.add_field(name="Timp total", value=daily_stats["time"], inline=False)
+            embedded_message.add_field(name="Distanță totală", value=daily_stats["distance"], inline=False)
+            await channel.send(embed=embedded_message)
+
     async def __send_startup_message(self, t_activities, t_athletes):
         channel = self.get_channel(discord_channel_name_to_id['bot_home'])
         embedded_message = Embed(title="✅ Tomita started", description="🐈 Tomita is running (around the house)!", color=0xFFC0CB)
@@ -81,11 +89,12 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
         self.owner_id = 279996271388000256  # Maurice
         self.commands_playful = ['!bobite', '!cacacios', '!pupic', '!sudo_pupic']
         self.commands_strava = [
-            '!strava_stats',
-            '!strava_weekly',
+            '!strava_daily',
             '!strava_monthly',
+            '!strava_stats',
+            '!strava_sync',
+            '!strava_weekly',
             '!strava_yearly',
-            '!strava_sync'
         ]
 
         self.strava = TomitaStrava(
