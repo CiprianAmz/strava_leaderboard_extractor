@@ -2,11 +2,13 @@ import json
 from typing import Optional
 from dataclasses import dataclass
 
+
 @dataclass
 class StravaConfig():
-    access_token:str
-    club_id:str
-    activities_limit:Optional[int]
+    access_token: str
+    club_id: str
+    activities_limit: Optional[int]
+
 
 def load_strava_config_from_json(file_path: str) -> StravaConfig:
     with open(file_path) as f:

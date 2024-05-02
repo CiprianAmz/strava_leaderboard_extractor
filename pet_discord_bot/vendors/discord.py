@@ -2,7 +2,7 @@ import random
 
 from discord import Intents, Client
 
-from utils.logs import tomi_logger
+from pet_discord_bot.utils.logs import tomi_logger
 
 owner_id = 279996271388000256 # Maurice
 

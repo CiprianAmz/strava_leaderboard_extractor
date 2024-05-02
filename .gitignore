@@ -3,3 +3,6 @@
 config.json
 __pycache__
 local_configs
+
+# Local configs
+configs

@@ -3,14 +3,16 @@ import random
 
 from discord import Intents, Client as DiscordClient, Embed
 
-from tomita_discord_bot.tomita.tomita_strava import TomitaStrava
 from configs.constants import discord_channel_name_to_id
-from app.utils.logs import tomi_logger
-from tomita_discord_bot.athlete_pet import AthletePet
+
+from strava_leaderboard_extractor.strava_config import load_strava_config_from_json
+from pet_discord_bot.athlete_pet import AthletePet
+from pet_discord_bot.tomita.tomita_strava import TomitaStrava
+from pet_discord_bot.utils.logs import tomi_logger
 
 
 def get_replies(file_name):
-    with open(os.path.join(os.path.dirname(__file__), 'replies', file_name), 'r') as file:
+    with open(os.path.join(os.path.dirname(__file__), '../../bot_replies', file_name), 'r') as file:
         replies = file.read().splitlines()
     return replies
 
@@ -56,7 +58,7 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
             '!strava_monthly',
             '!strava_yearly'
         ]
-        self.strava = TomitaStrava()
+        self.strava = TomitaStrava(config_json=load_strava_config_from_json(os.path.join(os.path.dirname(__file__), '../../configs/strava_config.json')))
 
     async def on_ready(self):
         tomi_logger.info("Your pet is running (around the house)!")

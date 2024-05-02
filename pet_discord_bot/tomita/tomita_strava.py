@@ -1,16 +1,16 @@
 from humanfriendly import format_timespan
 from stravalib import Client
 
-from app.config.config import config
 from configs.constants import strava_activity_to_emoji
+from strava_leaderboard_extractor.strava_config import StravaConfig
 
 
 class TomitaStrava:
-    def __init__(self):
-        self.strava_client = Client(access_token=config.get("strava_access_token"))
+    def __init__(self, config_json: StravaConfig):
+        self.strava_client = Client(access_token=config_json.access_token)
         self.club_activities = self.strava_client.get_club_activities(
-            club_id=config.get("strava_club_id"),
-            limit=config.get("activities_limit", None)
+            club_id=config_json.club_id,
+            limit=config_json.activities_limit,
         )
 
     def print_stats(self):

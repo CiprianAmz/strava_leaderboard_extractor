@@ -1,4 +1,5 @@
 import logging
+import os
 
 
 class TomiStreamHandler(logging.StreamHandler):
@@ -14,7 +15,7 @@ tomi_logger.setLevel(logging.INFO)
 stream_handler = TomiStreamHandler()
 stream_handler.setLevel(logging.INFO)
 
-file_handler = logging.FileHandler("logs/tomi.log")
+file_handler = logging.FileHandler(os.getcwd() + "/../logs/tomi.log")
 file_handler.setLevel(logging.WARNING)
 
 tomi_logger.addHandler(stream_handler)
