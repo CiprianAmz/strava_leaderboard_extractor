@@ -2,7 +2,7 @@ import random
 
 from discord import Intents, Client
 
-from src.utils.logs import tomi_logger
+from utils.logs import tomi_logger
 
 owner_id = 279996271388000256 # Maurice
 
@@ -13,7 +13,7 @@ class TomitaBiciclistul(Client):
         self.caca_replies = self.get_replies('cacacios.txt')
 
     def get_replies(self, file_name):
-        with open('replies/' + file_name, 'r') as file:
+        with open('bot_replies/' + file_name, 'r') as file:
             replies = file.read().splitlines()
         return replies
 
