@@ -1,8 +1,6 @@
 import uuid
 from datetime import datetime
-from uuid import uuid4
 
-from humanfriendly import format_timespan
 from stravalib import Client
 
 from configs.constants import strava_activity_to_emoji
@@ -14,6 +12,11 @@ from strava_leaderboard_extractor.strava_config import StravaConfig
 
 
 class TomitaStrava:
+    def __replace_activity_type_name(self, activity_type: str) -> str:
+        if activity_type == "Soccer":
+            return "Football"
+        return activity_type
+
     def __init__(self, config_json: StravaConfig, activity_repo: ActivityRepository, athlete_repo: AthleteRepository):
         self.strava_client = Client(access_token=config_json.access_token)
         self.club_activities = self.strava_client.get_club_activities(
@@ -23,15 +26,49 @@ class TomitaStrava:
         self.activity_repo = activity_repo
         self.athlete_repo = athlete_repo
 
-    def print_stats(self):
-        activity_type_dict = {}
-        activity_type_time_dict = {}
-        activity_type_distance_dict = {}
+    def compute_overall_stats(self) -> dict:
+        activity_dict = {}
+        activity_time_dict = {}
+        activity_distance_dict = {}
+        for activity in self.activity_repo.fetch_all():
+            if activity.type not in activity_dict:
+                activity_dict.update({activity.type: 0})
+            activity_dict[activity.type] += 1
+
+            if activity.type not in activity_time_dict:
+                activity_time_dict.update({activity.type: 0})
+            activity_time_dict[activity.type] += activity.time
+
+            if activity.type not in activity_distance_dict:
+                activity_distance_dict.update({activity.type: 0})
+            activity_distance_dict[activity.type] += activity.distance
+        
+        count_str = ""
+        time_str = ""
+        distance_str = ""
+        
+        for key, val in sorted(activity_dict.items(), key=lambda item: item[1], reverse=True):
+            activity_emoji = strava_activity_to_emoji.get(key, "❓")
+            count_str += f"{activity_emoji} {self.__replace_activity_type_name(key)}: {val} activities\n"
+
+        for key, val in sorted(activity_time_dict.items(), key=lambda item: item[1], reverse=True):
+            activity_emoji = strava_activity_to_emoji.get(key, "❓")
+            time_str += f"{activity_emoji} {self.__replace_activity_type_name(key)}: {val}\n"
+
+        for key, val in sorted(activity_distance_dict.items(), key=lambda item: item[1], reverse=True):
+            activity_emoji = strava_activity_to_emoji.get(key, "❓")
+            distance_str += f"{activity_emoji} {self.__replace_activity_type_name(key)}: {val} km\n"
+
+        return {
+            "count": count_str,
+            "time": time_str,
+            "distance": distance_str,
+        }
+
+    def sync_stats(self) -> int:
+        activities_added = 0
 
         for activity in self.club_activities:
-            if activity.type not in activity_type_dict:
-                activity_type_dict.update({activity.type: 0})
-
             athlete = self.athlete_repo.get_by_name(activity.athlete.firstname, activity.athlete.lastname)
             if athlete is None:
                 tomi_logger.warn(f"Athlete {activity.athlete.firstname} {activity.athlete.lastname} not found in DB")
@@ -53,40 +90,9 @@ class TomitaStrava:
             if existing_activity is None:
                 new_activity.date = datetime.now().strftime("%Y-%m-%d %H:%M")
                 self.activity_repo.add(new_activity)
+                activities_added += 1
             else:
-                tomi_logger.info(f"Activity {activity.name} from {athlete.first_name} {athlete.last_name} already exists in DB")
-            activity_type_dict[activity.type] += 1
+                tomi_logger.info(
+                    f"Activity {activity.name} from {athlete.first_name} {athlete.last_name} already exists in DB")
 
-            if activity.type not in activity_type_time_dict:
-                activity_type_time_dict.update({activity.type: 0})
-
-            activity_type_time_dict[activity.type] += activity.moving_time.total_seconds()
-
-            if activity.type not in activity_type_distance_dict:
-                activity_type_distance_dict.update({activity.type: 0})
-
-            activity_type_distance_dict[activity.type] += activity.distance
-
-        result_time = ""
-        result_count = ""
-        result_distance = ""
-
-        for key, val in sorted(activity_type_dict.items(), key=lambda item: item[1], reverse=True):
-            activity_emoji = strava_activity_to_emoji.get(key, "❓")
-            result_count += f"{activity_emoji} {key}: {val} activities\n"
-
-        for key, val in sorted(activity_type_time_dict.items(), key=lambda item: item[1], reverse=True):
-            activity_emoji = strava_activity_to_emoji.get(key, "❓")
-            result_time += f"{activity_emoji} {key}: {format_timespan(val)}\n"
-
-        for key, val in sorted(activity_type_distance_dict.items(), key=lambda item: item[1], reverse=True):
-            if val.num > 0.0:
-                activity_emoji = strava_activity_to_emoji.get(key, "❓")
-                distance_in_km = val.num // 1000
-                result_distance += f"{activity_emoji} {key}: {distance_in_km} km\n"
-
-        return {
-            "time": result_time,
-            "count": result_count,
-            "distance": result_distance,
-        }
+        return activities_added

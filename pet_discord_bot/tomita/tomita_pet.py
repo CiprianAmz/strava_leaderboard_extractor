@@ -42,13 +42,21 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
 
     async def __strava_commands(self, message):
         channel = message.channel
-        await channel.send('Lăbuțele mele au calculat...')
-        strava_stats = self.strava.print_stats()
-        embedded_message = Embed(title="General Stats", description="Statisticile sportivilor", color=0x00ff00)
-        embedded_message.add_field(name="Tipuri de activități", value=strava_stats["count"], inline=False)
-        embedded_message.add_field(name="Timp total", value=strava_stats["time"], inline=False)
-        embedded_message.add_field(name="Distanță totală", value=strava_stats["distance"], inline=False)
-        await channel.send(embed=embedded_message)
+        await channel.send('🐾 Lăbuțele mele verifică Strava 🐾')
+        if message.content.startswith('!strava_stats'):
+            strava_stats = self.strava.compute_overall_stats()
+            embedded_message = Embed(title="General Stats", description="Statisticile sportivilor", color=0x00ff00)
+            embedded_message.add_field(name="Tipuri de activități", value=strava_stats["count"], inline=False)
+            embedded_message.add_field(name="Timp total", value=strava_stats["time"], inline=False)
+            embedded_message.add_field(name="Distanță totală", value=strava_stats["distance"], inline=False)
+            await channel.send(embed=embedded_message)
+
+        if message.content.startswith('!strava_sync'):
+            t_added_activities = self.strava.sync_stats()
+            if t_added_activities == 0:
+                await channel.send('🥺 Nu am adăugat nicio activitate nouă în baza de date!')
+            else:
+                await channel.send(f'✅ Am adăugat {t_added_activities} activități noi în baza de date!')
 
     async def __send_startup_message(self, t_activities, t_athletes):
         channel = self.get_channel(discord_channel_name_to_id['bot_home'])
@@ -76,7 +84,8 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
             '!strava_stats',
             '!strava_weekly',
             '!strava_monthly',
-            '!strava_yearly'
+            '!strava_yearly',
+            '!strava_sync'
         ]
 
         self.strava = TomitaStrava(
