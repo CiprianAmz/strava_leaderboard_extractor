@@ -1,6 +1,7 @@
 import os
 import random
 
+import psutil
 from discord import Intents, Client as DiscordClient, Embed
 
 from configs.constants import discord_channel_name_to_id
@@ -66,6 +67,37 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
             embedded_message.add_field(name="Distanță totală", value=daily_stats["distance"], inline=False)
             await channel.send(embed=embedded_message)
 
+        if message.content.startswith('!strava_monthly'):
+            monthly_stats = self.strava.compute_monthly_stats()
+            embedded_message = Embed(title="Monthly Stats", description="Statisticile lunare", color=0x00ff00)
+            embedded_message.add_field(name="Numar de activități", value=monthly_stats["count"], inline=False)
+            embedded_message.add_field(name="Timp total", value=monthly_stats["time"], inline=False)
+            embedded_message.add_field(name="Distanță totală", value=monthly_stats["distance"], inline=False)
+            await channel.send(embed=embedded_message)
+
+        if message.content.startswith('!strava_yearly'):
+            yearly_stats = self.strava.compute_yearly_stats()
+            embedded_message = Embed(title="Yearly Stats", description="Statisticile anuale", color=0x00ff00)
+            embedded_message.add_field(name="Numar de activități", value=yearly_stats["count"], inline=False)
+            embedded_message.add_field(name="Timp total", value=yearly_stats["time"], inline=False)
+            embedded_message.add_field(name="Distanță totală", value=yearly_stats["distance"], inline=False)
+            await channel.send(embed=embedded_message)
+
+    async def __health_commands(self, message):
+        if message.content.startswith('!verifica_labutele'):
+            await message.reply('🏥 Doctorul verifică labuțele!', mention_author=True)
+            cpu_usage = psutil.cpu_percent()
+            ram_usage = psutil.virtual_memory().percent
+            await message.channel.send(f'🕑 CPU: {cpu_usage}% | 🔥 RAM: {ram_usage}%')
+
+        if message.content.startswith('!verifica_puful'):
+            await message.reply('𐄹 Se canterește blănosul!', mention_author=True)
+            hdd = psutil.disk_usage('/')
+            hdd_total = hdd.total / (2 ** 30)
+            hdd_used = hdd.used / (2 ** 30)
+            hdd_free = hdd.free / (2 ** 30)
+            await message.channel.send(f'💾: {hdd_used:.2f}GB / {hdd_total:.2f}GB | 🎉 Liber: {hdd_free:.2f}GB')
+
     async def __send_startup_message(self, t_activities, t_athletes):
         channel = self.get_channel(discord_channel_name_to_id['bot_home'])
         embedded_message = Embed(title="✅ Tomita started", description="🐈 Tomita is running (around the house)!", color=0xFFC0CB)
@@ -93,9 +125,9 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
             '!strava_monthly',
             '!strava_stats',
             '!strava_sync',
-            '!strava_weekly',
             '!strava_yearly',
         ]
+        self.commands_health = ['!verifica_labutele', '!verifica_puful']
 
         self.strava = TomitaStrava(
             config_json=load_strava_config_from_json(
@@ -140,6 +172,13 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
                 await message.reply('Comanda este disponibilă doar pe canalul #🚴🏽-sportivii', mention_author=True)
                 return
             await self.__strava_commands(message)
+
+        if message.content.startswith(tuple(self.commands_health)):
+            if message.channel.id != discord_channel_name_to_id['bot_home']:
+                await message.reply('Comanda este disponibilă doar pe canalul 🔧-bot-testing', mention_author=True)
+                return
+
+            await self.__health_commands(message)
 
 
 intents = Intents.default()
