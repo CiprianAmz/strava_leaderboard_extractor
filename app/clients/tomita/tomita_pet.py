@@ -25,6 +25,9 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
             random_reply = random.choice(self.caca_replies)
             await message.reply(random_reply, mention_author=True)
 
+        if message.content.startswith('!sudo_pupic'):
+            await message.reply('Frr, frr _sunete de tors_', mention_author=True)
+
         if message.content.startswith('!pupic'):
             if message.author.id == self.owner_id:
                 await message.reply('Frr, frr _sunete de tors_', mention_author=True)
@@ -46,7 +49,7 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
         self.bobite_replies = get_replies('bobite.txt')
         self.caca_replies = get_replies('cacacios.txt')
         self.owner_id = 279996271388000256  # Maurice
-        self.commands_playful = ['!bobite', '!cacacios', '!pupic']
+        self.commands_playful = ['!bobite', '!cacacios', '!pupic', '!sudo_pupic']
         self.commands_strava = [
             '!strava_stats',
             '!strava_weekly',
