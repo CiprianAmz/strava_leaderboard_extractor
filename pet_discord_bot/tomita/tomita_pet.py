@@ -1,12 +1,11 @@
 import os
 import random
-
 import psutil
-from discord import Intents, Client as DiscordClient, Embed
 
-from configs.constants import discord_channel_name_to_id
+from discord import Intents, Client as DiscordClient, Embed
 from strava_leaderboard_extractor.strava_config import load_strava_config_from_json
 
+from pet_discord_bot.config.constants import discord_channel_name_to_id
 from pet_discord_bot.utils.discord_config import load_discord_config_from_json
 from pet_discord_bot.vendors.firebase import FirebaseClient
 from pet_discord_bot.repository.athlete import AthleteRepository
@@ -111,7 +110,7 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
             db_url=load_discord_config_from_json(
                 os.path.join(os.path.dirname(__file__), '../../configs/discord_bot_config.json')
             ).firebase_url,
-            credential_path=os.getcwd() + "/../firebase_config.json"
+            credential_path=os.path.join(os.path.dirname(__file__), '../../configs/firebase_config.json')
         )
         self.athlete_repository = AthleteRepository(client=firebase_client)
         self.activity_repository = ActivityRepository(client=firebase_client)

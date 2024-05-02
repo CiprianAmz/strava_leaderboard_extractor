@@ -1,7 +1,7 @@
 import os
 
-from pet_discord_bot.tomita.tomita_pet import tomita
-from pet_discord_bot.utils.discord_config import load_discord_config_from_json
+from tomita.tomita_pet import tomita
+from utils.discord_config import load_discord_config_from_json
 
 
 def main():

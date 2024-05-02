@@ -5,11 +5,10 @@ from typing import List
 from humanfriendly import format_timespan
 from stravalib import Client
 
-from configs.constants import strava_activity_to_emoji
+from pet_discord_bot.config.constants import strava_activity_to_emoji
 from pet_discord_bot.repository.activity import ActivityRepository
 from pet_discord_bot.repository.athlete import AthleteRepository
 from pet_discord_bot.types.activity import Activity
-from pet_discord_bot.types.athlete_stats import AthleteStats
 from pet_discord_bot.utils.logs import tomi_logger
 from strava_leaderboard_extractor.strava_config import StravaConfig
 
