@@ -4,8 +4,12 @@ import random
 from discord import Intents, Client as DiscordClient, Embed
 
 from configs.constants import discord_channel_name_to_id
-
 from strava_leaderboard_extractor.strava_config import load_strava_config_from_json
+
+from pet_discord_bot.utils.discord_config import load_discord_config_from_json
+from pet_discord_bot.vendors.firebase import FirebaseClient
+from pet_discord_bot.repository.athlete import AthleteRepository
+from pet_discord_bot.repository.activity import ActivityRepository
 from pet_discord_bot.athlete_pet import AthletePet
 from pet_discord_bot.tomita.tomita_strava import TomitaStrava
 from pet_discord_bot.utils.logs import tomi_logger
@@ -48,6 +52,15 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        firebase_client = FirebaseClient(
+            db_url=load_discord_config_from_json(
+                os.path.join(os.path.dirname(__file__), '../../configs/discord_bot_config.json')
+            ).firebase_url,
+            credential_path=os.getcwd() + "/../firebase_config.json"
+        )
+        self.athlete_repository = AthleteRepository(client=firebase_client)
+        self.activity_repository = ActivityRepository(client=firebase_client)
+
         self.bobite_replies = get_replies('bobite.txt')
         self.caca_replies = get_replies('cacacios.txt')
         self.owner_id = 279996271388000256  # Maurice
@@ -61,7 +74,10 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
         self.strava = TomitaStrava(config_json=load_strava_config_from_json(os.path.join(os.path.dirname(__file__), '../../configs/strava_config.json')))
 
     async def on_ready(self):
-        tomi_logger.info("Your pet is running (around the house)!")
+        athletes = self.athlete_repository.fetch_athletes()
+        tomi_logger.info(f'Loaded {len(athletes)} athletes from Firebase')
+
+        tomi_logger.info("Tomita is running (around the house)!")
         tomi_logger.info(f'Logged in as {self.user} (ID: {self.user.id})')
         tomi_logger.info('------')
 
