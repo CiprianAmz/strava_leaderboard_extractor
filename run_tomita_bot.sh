@@ -1,8 +1,9 @@
-#!/usr/bin/bash
+#!/bin/bash
+
 python3 -m venv .venv
 source .venv/bin/activate
 
 pip3 install -r requirements.txt
-python3 src/vendors/strava.py
+python3 tomita_discord_bot/tomita_bot_entrypoint.py
 
 deactivate
