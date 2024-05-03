@@ -105,7 +105,7 @@ class TomitaStrava:
 
         for key, val in sorted(activity_distance_dict.items(), key=lambda item: item[1], reverse=True):
             activity_emoji = strava_activity_to_emoji.get(key, "❓")
-            distance_str += f"{activity_emoji} {self.__replace_activity_type_name(key)}: {"{:.2f}".format(val)} km\n"
+            distance_str += f"{activity_emoji} {self.__replace_activity_type_name(key)}: {'{:.2f}'.format(val)} km\n"
 
         return {
             "count": count_str,
@@ -137,7 +137,7 @@ class TomitaStrava:
 
         for idx, (key, val) in enumerate(result["distance"]):
             athlete = self.athlete_repo.get(key)
-            distance_str += f"*{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:* {"{:.2f}".format(val)}km\n"
+            distance_str += f"*{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:* {'{:.2f}'.format(val)} km\n"
 
         return {
             "count": count_str,
@@ -169,7 +169,7 @@ class TomitaStrava:
 
         for idx, (key, val) in enumerate(result["distance"]):
             athlete = self.athlete_repo.get(key)
-            distance_str += f"*{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:* {val} km\n"
+            distance_str += f"*{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:* {'{:.2f}'.format(val)} km\n"
 
         return {
             "count": count_str,
@@ -201,7 +201,7 @@ class TomitaStrava:
 
         for idx, (key, val) in enumerate(result["distance"]):
             athlete = self.athlete_repo.get(key)
-            distance_str += f"*{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:* {"{:.2f}".format(val)}km\n"
+            distance_str += f"*{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:* {'{:.2f}'.format(val)} km\n"
 
         return {
             "count": count_str,
