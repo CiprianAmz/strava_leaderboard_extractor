@@ -1,5 +1,9 @@
 import os
 
+# Needed for the bash script to work on Raspberry Pi
+# import sys
+# sys.path.insert(0, '/Users/mihaimatraguna/Projects/Clients/strava_leaderboard_extractor')
+
 from tomita.tomita_pet import tomita
 from utils.discord_config import load_discord_config_from_json
 

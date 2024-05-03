@@ -82,12 +82,13 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
             embedded_message.add_field(name="Distanță totală", value=yearly_stats["distance"], inline=False)
             await channel.send(embed=embedded_message)
 
-    async def __health_commands(self, message):
+    @staticmethod
+    async def __health_commands(message):
         if message.content.startswith('!verifica_labutele'):
             await message.reply('🏥 Doctorul verifică labuțele!', mention_author=True)
             cpu_usage = psutil.cpu_percent()
             ram_usage = psutil.virtual_memory().percent
-            await message.channel.send(f'🕑 CPU: {cpu_usage}% | 🔥 RAM: {ram_usage}%')
+            await message.channel.send(f'ℹ️ Hostname: {os.uname().nodename} | 🖥️ CPU: {cpu_usage}% | 🧠 RAM: {ram_usage}%')
 
         if message.content.startswith('!verifica_puful'):
             await message.reply('𐄹 Se canterește blănosul!', mention_author=True)
@@ -99,7 +100,11 @@ class TomitaBiciclistul(AthletePet, DiscordClient):
 
     async def __send_startup_message(self, t_activities, t_athletes):
         channel = self.get_channel(discord_channel_name_to_id['bot_home'])
-        embedded_message = Embed(title="✅ Tomita started", description="🐈 Tomita is running (around the house)!", color=0xFFC0CB)
+        embedded_message = Embed(
+            title="✅ Tomita started",
+            description=f"🐈 Tomita is running (around the house)!\n\nℹ️ Hostname: {os.uname().nodename}",
+            color=0xFFC0CB
+        )
         embedded_message.add_field(name="Athletes", value=f"{t_athletes} athletes", inline=False)
         embedded_message.add_field(name="Activities", value=f"{t_activities} activities", inline=False)
         await channel.send(embed=embedded_message)
