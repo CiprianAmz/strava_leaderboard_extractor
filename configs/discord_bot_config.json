@@ -1,3 +1,4 @@
 {
-    "discord_access_token": "<INSERT_DISCORD_TOKEN>"
+    "discord_access_token": "<INSERT_DISCORD_TOKEN>",
+    "firebase_url": "<INSERT_FIREBASE_TOKEN>"
 }
