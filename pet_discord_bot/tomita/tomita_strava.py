@@ -129,15 +129,15 @@ class TomitaStrava:
 
         for idx, (key, val) in enumerate(result["activities"]):
             athlete = self.athlete_repo.get(key)
-            count_str += f"*{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:* {val} activities\n"
+            count_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {val} activities\n"
 
         for idx, (key, val) in enumerate(result["time"]):
             athlete = self.athlete_repo.get(key)
-            time_str += f"*{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:* {format_timespan(val)}\n"
+            time_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {format_timespan(val)}\n"
 
         for idx, (key, val) in enumerate(result["distance"]):
             athlete = self.athlete_repo.get(key)
-            distance_str += f"*{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:* {'{:.2f}'.format(val)} km\n"
+            distance_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {'{:.2f}'.format(val)} km\n"
 
         return {
             "count": count_str,
@@ -161,15 +161,15 @@ class TomitaStrava:
 
         for idx, (key, val) in enumerate(result["activities"]):
             athlete = self.athlete_repo.get(key)
-            count_str += f"*{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:* {val} activities\n"
+            count_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {val} activities\n"
 
         for idx, (key, val) in enumerate(result["time"]):
             athlete = self.athlete_repo.get(key)
-            time_str += f"*{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:* {format_timespan(val)}\n"
+            time_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {format_timespan(val)}\n"
 
         for idx, (key, val) in enumerate(result["distance"]):
             athlete = self.athlete_repo.get(key)
-            distance_str += f"*{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:* {'{:.2f}'.format(val)} km\n"
+            distance_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {'{:.2f}'.format(val)} km\n"
 
         return {
             "count": count_str,
@@ -193,15 +193,15 @@ class TomitaStrava:
 
         for idx, (key, val) in enumerate(result["activities"]):
             athlete = self.athlete_repo.get(key)
-            count_str += f"*{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:* {val} activities\n"
+            count_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {val} activities\n"
 
         for idx, (key, val) in enumerate(result["time"]):
             athlete = self.athlete_repo.get(key)
-            time_str += f"*{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:* {format_timespan(val)}\n"
+            time_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {format_timespan(val)}\n"
 
         for idx, (key, val) in enumerate(result["distance"]):
             athlete = self.athlete_repo.get(key)
-            distance_str += f"*{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:* {'{:.2f}'.format(val)} km\n"
+            distance_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {'{:.2f}'.format(val)} km\n"
 
         return {
             "count": count_str,
@@ -209,8 +209,8 @@ class TomitaStrava:
             "distance": distance_str,
         }
 
-    def sync_stats(self) -> int:
-        activities_added = 0
+    def sync_stats(self) -> List[Activity]:
+        activities_added: List[Activity] = []
 
         for activity in self.club_activities:
             athlete = self.athlete_repo.get_by_name(activity.athlete.firstname, activity.athlete.lastname)
@@ -232,9 +232,6 @@ class TomitaStrava:
             if existing_activity is None:
                 new_activity.date = datetime.now().strftime("%Y-%m-%d %H:%M")
                 self.activity_repo.add(new_activity)
-                activities_added += 1
-            else:
-                tomi_logger.info(
-                    f"Activity {activity.name} from {athlete.first_name} {athlete.last_name} already exists in DB")
+                activities_added.append(new_activity)
 
         return activities_added

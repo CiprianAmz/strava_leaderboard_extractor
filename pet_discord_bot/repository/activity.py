@@ -1,5 +1,3 @@
-import schedule
-
 from pet_discord_bot.types.activity import Activity
 from pet_discord_bot.vendors.firebase import FirebaseClient
 
@@ -14,11 +12,6 @@ class ActivityRepository:
             self.activities = [Activity(**activity) for activity in firebase_activities.values()]
         else:
             self.activities = []
-
-    def start_scheduler(self) -> None:
-        schedule.every().second.do(self.fetch_all)
-        while True:
-            schedule.run_pending()
 
     def fetch_all(self) -> list[Activity]:
         return self.activities
