@@ -136,7 +136,7 @@ class TomitaBiciclistul(BotClient):
             hdd_total = hdd.total / (2 ** 30)
             hdd_used = hdd.used / (2 ** 30)
             hdd_free = hdd.free / (2 ** 30)
-            await message.channel.send(f'💾: {hdd_used:.2f}GB / {hdd_total:.2f}GB | 🎉 Liber: {hdd_free:.2f}GB')
+            await message.channel.send(f'💾: {hdd_used:.1f}GB / {hdd_total:.1f}GB | 🎉 Liber: {hdd_free:.1f}GB')
 
     async def __send_startup_message(self, t_activities: int, t_athletes: int) -> None:
         channel = self.get_channel(discord_channel_name_to_id['bot_home'])

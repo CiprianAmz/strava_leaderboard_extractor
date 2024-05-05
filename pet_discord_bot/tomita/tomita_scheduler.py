@@ -2,6 +2,7 @@ import threading
 import schedule
 
 from pet_discord_bot.tomita.tomita_pet import TomitaBiciclistul
+from pet_discord_bot.utils.logs import tomi_logger
 
 
 class TomitaScheduler:
@@ -9,12 +10,12 @@ class TomitaScheduler:
         self.tomita_pet = tomita_pet
 
     def __start_scheduler(self):
-        schedule.every(30).minutes.do(self.tomita_pet.fetch_new_activities)
+        schedule.every(5).minutes.do(self.tomita_pet.fetch_new_activities)
         while True:
             schedule.run_pending()
 
     def run(self):
-        print("Starting scheduler")
+        tomi_logger.info("Starting Tomita scheduler")
         thread = threading.Thread(target=self.__start_scheduler, daemon=True)
         thread.start()
 
