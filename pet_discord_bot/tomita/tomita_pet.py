@@ -159,7 +159,7 @@ class TomitaBiciclistul(BotClient):
                 f"| 🕒 **Timp:** {format_timespan(activity.time)} "
                 f"| 🛣️ **Distanță:** {activity.distance} km")
 
-    def __fetch_new_activities(self) -> None:
+    def fetch_new_activities(self) -> None:
         tomi_logger.info("Fetching new activities from Strava...")
         new_activities = self.strava.sync_stats()
         asyncio.run(self.__send_new_activities(new_activities))
@@ -208,8 +208,3 @@ class TomitaBiciclistul(BotClient):
                 return
 
             await self.__health_commands(message)
-
-
-intents = Intents.default()
-intents.message_content = True
-tomita = TomitaBiciclistul(intents=intents)
