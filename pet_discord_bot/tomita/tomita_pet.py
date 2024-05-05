@@ -94,6 +94,7 @@ class TomitaBiciclistul(BotClient):
             if len(added_activities) == 0:
                 await channel.send('🥺 Nu am adăugat nicio activitate nouă în baza de date!')
             else:
+                await self.__send_new_activities(added_activities)
                 await channel.send(f'✅ Am adăugat {len(added_activities)} activități noi în baza de date!')
 
         if message.content.startswith('!strava_daily'):
@@ -154,7 +155,7 @@ class TomitaBiciclistul(BotClient):
             athlete: Athlete = self.athlete_repository.get(activity.athlete_id)
             await channel.send(
                 f"<@{athlete.discord_id}> a adăugat o nouă activitate **{activity.name}** pe Strava!\n"
-                f"| {strava_activity_to_emoji(activity.type)} **Tip:** {activity.type} "
+                f"| {strava_activity_to_emoji.get(activity.type, '❓')} **Tip:** {activity.type} "
                 f"| 🕒 **Timp:** {format_timespan(activity.time)} "
                 f"| 🛣️ **Distanță:** {activity.distance} km")
 

@@ -1,19 +1,38 @@
+import time
 import uuid
 from datetime import datetime
 from typing import List
 
 from humanfriendly import format_timespan
 from stravalib import Client
+from stravalib.protocol import AccessInfo
 
 from pet_discord_bot.config.constants import strava_activity_to_emoji
 from pet_discord_bot.repository.activity import ActivityRepository
 from pet_discord_bot.repository.athlete import AthleteRepository
 from pet_discord_bot.types.activity import Activity
+from pet_discord_bot.types.strava_access import StravaAccess
 from pet_discord_bot.utils.logs import tomi_logger
 from strava_leaderboard_extractor.strava_config import StravaConfig
 
 
 class TomitaStrava:
+
+    def __init__(self, config_json: StravaConfig, activity_repo: ActivityRepository, athlete_repo: AthleteRepository):
+        self.strava_client = Client(access_token=config_json.access_token)
+        self.strava_config = config_json
+        self.strava_access = StravaAccess(
+            access_token=config_json.access_token,
+            refresh_token=config_json.refresh_token,
+            expires_at=int(time.time())
+        )
+        self.club_activities = self.strava_client.get_club_activities(
+            club_id=config_json.club_id,
+            limit=3000,
+        )
+        self.activity_repo = activity_repo
+        self.athlete_repo = athlete_repo
+
     @staticmethod
     def __replace_activity_type_name(activity_type: str) -> str:
         if activity_type == "Soccer":
@@ -24,7 +43,8 @@ class TomitaStrava:
     def __convert_str_date_to_datetime(str_date: str) -> datetime:
         return datetime.strptime(str_date, "%Y-%m-%d %H:%M")
 
-    def __get_medal_for_idx(self, idx: int) -> str:
+    @staticmethod
+    def __get_medal_for_idx(idx: int) -> str:
         if idx == 0:
             return "🥇"
         if idx == 1:
@@ -40,8 +60,8 @@ class TomitaStrava:
         for activity in activities_list:
             athlete = self.athlete_repo.get(activity.athlete_id)
             if athlete is None:
-                tomi_logger.warn(f"Athlete with ID {activity.athlete_id} not found in DB")
-                tomi_logger.error(f"Activity {activity.name} will be skipped")
+                tomi_logger.error(f"Athlete with ID {activity.athlete_id} not found in DB "
+                                  f"- skipping activity {activity.name}")
                 continue
 
             if athlete.internal_id not in athlete_stats_by_number_dict:
@@ -65,14 +85,19 @@ class TomitaStrava:
             "distance": top_3_by_distance_list,
         }
 
-    def __init__(self, config_json: StravaConfig, activity_repo: ActivityRepository, athlete_repo: AthleteRepository):
-        self.strava_client = Client(access_token=config_json.access_token)
-        self.club_activities = self.strava_client.get_club_activities(
-            club_id=config_json.club_id,
-            limit=3000,
+    def __refresh_access_token(self) -> None:
+        access_info = self.strava_client.refresh_access_token(
+            client_id=self.strava_config.client_id,
+            client_secret=self.strava_config.client_secret,
+            refresh_token=self.strava_config.refresh_token,
         )
-        self.activity_repo = activity_repo
-        self.athlete_repo = athlete_repo
+        self.strava_access = StravaAccess(
+            access_token=access_info["access_token"],
+            refresh_token=access_info["refresh_token"],
+            expires_at=access_info["expires_at"],
+        )
+        self.strava_client = Client(access_token=access_info["access_token"])
+        tomi_logger.info("Access token refreshed successfully")
 
     def compute_overall_stats(self) -> dict:
         activity_dict = {}
@@ -211,6 +236,8 @@ class TomitaStrava:
 
     def sync_stats(self) -> List[Activity]:
         activities_added: List[Activity] = []
+        if self.strava_access.expires_at < int(time.time()):
+            self.__refresh_access_token()
 
         for activity in self.club_activities:
             athlete = self.athlete_repo.get_by_name(activity.athlete.firstname, activity.athlete.lastname)
@@ -226,10 +253,10 @@ class TomitaStrava:
                 internal_id=str(uuid.uuid4()),
                 name=activity.name,
                 time=int(activity.moving_time.total_seconds()),
-                type=activity.type,
+                type=str(activity.type),
             )
             existing_activity = self.activity_repo.get_by_time_and_distance(new_activity.time, new_activity.distance)
-            if existing_activity is None:
+            if existing_activity is None and new_activity.distance > 0.0 and new_activity.time > 0:
                 new_activity.date = datetime.now().strftime("%Y-%m-%d %H:%M")
                 self.activity_repo.add(new_activity)
                 activities_added.append(new_activity)
