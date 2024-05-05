@@ -159,7 +159,7 @@ class TomitaBiciclistul(BotClient):
                 f"| 🕒 **Timp:** {self.strava.convert_seconds_to_human_readable(activity.time)} "
                 f"| 🛣️ **Distanță:** {activity.distance} km")
 
-    @tasks.loop(seconds=10)
+    @tasks.loop(minutes=10)
     async def fetch_new_activities(self) -> None:
         tomi_logger.info("Fetching new activities from Strava...")
         new_activities = self.strava.sync_stats()
