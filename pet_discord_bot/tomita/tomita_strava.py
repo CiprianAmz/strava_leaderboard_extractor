@@ -53,7 +53,7 @@ class TomitaStrava:
         return "🎖️"
 
     @staticmethod
-    def __convert_seconds_to_human_readable(seconds: int) -> str:
+    def convert_seconds_to_human_readable(seconds: int) -> str:
         formatted_time = format_timespan(seconds)
         for key, val in time_unit_to_short.items():
             formatted_time = formatted_time.replace(key, val)

@@ -1,11 +1,11 @@
-import asyncio
 import os
 import random
 from typing import List
 
 import psutil
 
-from discord import Intents, Embed, Message
+from discord import Embed, Message, Intents
+from discord.ext import tasks
 from humanfriendly import format_timespan
 
 from pet_discord_bot.types.activity import Activity
@@ -156,13 +156,14 @@ class TomitaBiciclistul(BotClient):
             await channel.send(
                 f"<@{athlete.discord_id}> a adăugat o nouă activitate **{activity.name}** pe Strava!\n"
                 f"| {strava_activity_to_emoji.get(activity.type, '❓')} **Tip:** {activity.type} "
-                f"| 🕒 **Timp:** {format_timespan(activity.time)} "
+                f"| 🕒 **Timp:** {self.strava.convert_seconds_to_human_readable(activity.time)} "
                 f"| 🛣️ **Distanță:** {activity.distance} km")
 
-    def fetch_new_activities(self) -> None:
+    @tasks.loop(seconds=10)
+    async def fetch_new_activities(self) -> None:
         tomi_logger.info("Fetching new activities from Strava...")
         new_activities = self.strava.sync_stats()
-        asyncio.run(self.__send_new_activities(new_activities))
+        await self.__send_new_activities(new_activities)
         tomi_logger.info(f"Sent {len(new_activities)} new activities to Discord")
 
     async def on_ready(self):
@@ -176,6 +177,7 @@ class TomitaBiciclistul(BotClient):
         tomi_logger.info('------')
 
         await self.__send_startup_message(len(activities), len(athletes))
+        self.fetch_new_activities.start()
 
     async def on_message(self, message):
         # We do not want the bot to reply to itself
@@ -208,3 +210,8 @@ class TomitaBiciclistul(BotClient):
                 return
 
             await self.__health_commands(message)
+
+
+intents = Intents.default()
+intents.message_content = True
+tomita = TomitaBiciclistul(intents=intents)
