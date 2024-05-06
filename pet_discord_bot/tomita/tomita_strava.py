@@ -93,7 +93,7 @@ class TomitaStrava:
             "distance": top_3_by_distance_list,
         }
 
-    def __refresh_access_token(self) -> None:
+    def refresh_access_token(self) -> None:
         access_info = self.strava_client.refresh_access_token(
             client_id=self.strava_config.client_id,
             client_secret=self.strava_config.client_secret,
@@ -135,7 +135,7 @@ class TomitaStrava:
         for key, val in sorted(activity_time_dict.items(), key=lambda item: item[1], reverse=True):
             activity_emoji = strava_activity_to_emoji.get(key, "❓")
             time_str += (f"{activity_emoji} {self.__replace_activity_type_name(key)}: "
-                         f"{self.__convert_seconds_to_human_readable(val)}\n")
+                         f"{self.convert_seconds_to_human_readable(val)}\n")
 
         for key, val in sorted(activity_distance_dict.items(), key=lambda item: item[1], reverse=True):
             activity_emoji = strava_activity_to_emoji.get(key, "❓")
@@ -168,7 +168,7 @@ class TomitaStrava:
         for idx, (key, val) in enumerate(result["time"]):
             athlete = self.athlete_repo.get(key)
             time_str += (f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** "
-                         f"{self.__convert_seconds_to_human_readable(val)}\n")
+                         f"{self.convert_seconds_to_human_readable(val)}\n")
 
         for idx, (key, val) in enumerate(result["distance"]):
             athlete = self.athlete_repo.get(key)
@@ -201,7 +201,7 @@ class TomitaStrava:
         for idx, (key, val) in enumerate(result["time"]):
             athlete = self.athlete_repo.get(key)
             time_str += (f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** "
-                         f"{self.__convert_seconds_to_human_readable(val)}\n")
+                         f"{self.convert_seconds_to_human_readable(val)}\n")
 
         for idx, (key, val) in enumerate(result["distance"]):
             athlete = self.athlete_repo.get(key)
@@ -234,7 +234,7 @@ class TomitaStrava:
         for idx, (key, val) in enumerate(result["time"]):
             athlete = self.athlete_repo.get(key)
             time_str += (f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** "
-                         f"{self.__convert_seconds_to_human_readable(val)}\n")
+                         f"{self.convert_seconds_to_human_readable(val)}\n")
 
         for idx, (key, val) in enumerate(result["distance"]):
             athlete = self.athlete_repo.get(key)
@@ -249,7 +249,7 @@ class TomitaStrava:
     def sync_stats(self) -> List[Activity]:
         activities_added: List[Activity] = []
         if self.strava_access.expires_at < int(time.time()):
-            self.__refresh_access_token()
+            self.refresh_access_token()
 
         for activity in self.club_activities:
             athlete = self.athlete_repo.get_by_name(activity.athlete.firstname, activity.athlete.lastname)

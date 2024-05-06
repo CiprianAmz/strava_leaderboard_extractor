@@ -1,5 +1,6 @@
 import os
 import random
+from collections import deque
 from typing import List
 
 import psutil
@@ -45,13 +46,14 @@ class TomitaBiciclistul(BotClient):
         self.owner_id = 279996271388000256  # Maurice
         self.commands_playful = ['!bobite', '!cacacios', '!pupic', '!sudo_pupic']
         self.commands_strava = [
+            '!strava_auth',
             '!strava_daily',
             '!strava_monthly',
             '!strava_stats',
             '!strava_sync',
             '!strava_yearly',
         ]
-        self.commands_health = ['!verifica_labutele', '!verifica_puful']
+        self.commands_health = ['!verifica_labutele', '!verifica_puful', '!verifica_logurile']
 
         self.strava = TomitaStrava(
             config_json=load_strava_config_from_json(
@@ -97,6 +99,10 @@ class TomitaBiciclistul(BotClient):
                 await self.__send_new_activities(added_activities)
                 await channel.send(f'✅ Am adăugat {len(added_activities)} activități noi în baza de date!')
 
+        if message.content.startswith('!strava_auth'):
+            self.strava.refresh_access_token()
+            await channel.send('🔑 Lăbuțele mele sunt iar autorizate pe Strava!')
+
         if message.content.startswith('!strava_daily'):
             daily_stats = self.strava.compute_daily_stats()
             embedded_message = Embed(title="Daily Stats", description="Statisticile zilnice", color=0x00ff00)
@@ -137,6 +143,17 @@ class TomitaBiciclistul(BotClient):
             hdd_used = hdd.used / (2 ** 30)
             hdd_free = hdd.free / (2 ** 30)
             await message.channel.send(f'💾: {hdd_used:.1f}GB / {hdd_total:.1f}GB | 🎉 Liber: {hdd_free:.1f}GB')
+
+        if message.content.startswith('!verifica_logurile'):
+            await message.reply('🔦 Se verifică logurile!', mention_author=True)
+            file_name = os.path.join(os.path.dirname(__file__), '../../nohup.out')
+            with open(file_name, 'r') as file:
+                last_20_lines = deque(file, 20)
+            discord_logs = ""
+            for line in last_20_lines:
+                discord_logs += line
+            print(discord_logs)
+            await message.channel.send(f'```\n{discord_logs}\n```')
 
     async def __send_startup_message(self, t_activities: int, t_athletes: int) -> None:
         channel = self.get_channel(discord_channel_name_to_id['bot_home'])
