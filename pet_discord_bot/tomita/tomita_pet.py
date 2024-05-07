@@ -51,6 +51,7 @@ class TomitaBiciclistul(BotClient):
             '!strava_monthly',
             '!strava_stats',
             '!strava_sync',
+            '!strava_weekly',
             '!strava_yearly',
         ]
         self.commands_health = ['!verifica_labutele', '!verifica_puful', '!verifica_logurile']
@@ -111,6 +112,14 @@ class TomitaBiciclistul(BotClient):
             embedded_message.add_field(name="Distanță totală", value=daily_stats["distance"], inline=False)
             await channel.send(embed=embedded_message)
 
+        if message.content.startswith('!strava_weekly'):
+            weekly_stats = self.strava.compute_weekly_stats()
+            embedded_message = Embed(title="Weekly Stats", description="Statisticile săptămânale", color=0x00ff00)
+            embedded_message.add_field(name="Numar de activități", value=weekly_stats["count"], inline=False)
+            embedded_message.add_field(name="Timp total", value=weekly_stats["time"], inline=False)
+            embedded_message.add_field(name="Distanță totală", value=weekly_stats["distance"], inline=False)
+            await channel.send(embed=embedded_message)
+
         if message.content.startswith('!strava_monthly'):
             monthly_stats = self.strava.compute_monthly_stats()
             embedded_message = Embed(title="Monthly Stats", description="Statisticile lunare", color=0x00ff00)
@@ -148,9 +157,9 @@ class TomitaBiciclistul(BotClient):
             await message.reply('🔦 Se verifică logurile!', mention_author=True)
             file_name = os.path.join(os.path.dirname(__file__), '../../nohup.out')
             with open(file_name, 'r') as file:
-                last_20_lines = deque(file, 20)
+                last_15_lines = deque(file, 15)
             discord_logs = ""
-            for line in last_20_lines:
+            for line in last_15_lines:
                 discord_logs += line
             print(discord_logs)
             await message.channel.send(f'```\n{discord_logs}\n```')

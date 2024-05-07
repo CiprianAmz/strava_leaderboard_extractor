@@ -52,15 +52,6 @@ class TomitaStrava:
             return "🥉"
         return "🎖️"
 
-    @staticmethod
-    def convert_seconds_to_human_readable(seconds: int) -> str:
-        formatted_time = format_timespan(seconds)
-        for key, val in time_unit_to_short.items():
-            formatted_time = formatted_time.replace(key, val)
-        formatted_time = formatted_time.replace(" and ",  " ")
-        formatted_time = formatted_time.replace(", ",  " ")
-        return formatted_time
-
     def __compute_top_3(self, activities_list: List[Activity]) -> dict:
         athlete_stats_by_number_dict = {}
         athlete_stats_by_time_dict = {}
@@ -92,6 +83,37 @@ class TomitaStrava:
             "time": top_3_by_time_list,
             "distance": top_3_by_distance_list,
         }
+
+    def __compute_activities_str(self, activities_list) -> str:
+        activities_str = ""
+        for idx, (key, val) in enumerate(activities_list):
+            athlete = self.athlete_repo.get(key)
+            activities_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {val}\n"
+        return activities_str
+
+    def __compute_time_str(self, activities_list: List[Activity]) -> str:
+        time_str = ""
+        for idx, (key, val) in enumerate(activities_list):
+            athlete = self.athlete_repo.get(key)
+            time_str += (f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** "
+                         f"{self.convert_seconds_to_human_readable(val)}\n")
+        return time_str
+
+    def __compute_distance_str(self, activities_list: List[Activity]) -> str:
+        distance_str = ""
+        for idx, (key, val) in enumerate(activities_list):
+            athlete = self.athlete_repo.get(key)
+            distance_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {'{:.1f}'.format(val)} km\n"
+        return distance_str
+
+    @staticmethod
+    def convert_seconds_to_human_readable(seconds: int) -> str:
+        formatted_time = format_timespan(seconds)
+        for key, val in time_unit_to_short.items():
+            formatted_time = formatted_time.replace(key, val)
+        formatted_time = formatted_time.replace(" and ",  " ")
+        formatted_time = formatted_time.replace(", ",  " ")
+        return formatted_time
 
     def refresh_access_token(self) -> None:
         access_info = self.strava_client.refresh_access_token(
@@ -157,27 +179,26 @@ class TomitaStrava:
 
         result = self.__compute_top_3(daily_activities)
 
-        count_str = ""
-        time_str = ""
-        distance_str = ""
+        return {
+            "count": self.__compute_activities_str(result["activities"]),
+            "time": self.__compute_time_str(result["time"]),
+            "distance": self.__compute_distance_str(result["distance"]),
+        }
 
-        for idx, (key, val) in enumerate(result["activities"]):
-            athlete = self.athlete_repo.get(key)
-            count_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {val} activities\n"
+    def compute_weekly_stats(self) -> dict:
+        weekly_activities: List[Activity] = []
+        for activity in self.activity_repo.fetch_all():
+            if activity.date is not None:
+                activity_date = self.__convert_str_date_to_datetime(activity.date)
+                if activity_date.isocalendar()[1] == datetime.now().isocalendar()[1]:
+                    weekly_activities.append(activity)
 
-        for idx, (key, val) in enumerate(result["time"]):
-            athlete = self.athlete_repo.get(key)
-            time_str += (f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** "
-                         f"{self.convert_seconds_to_human_readable(val)}\n")
-
-        for idx, (key, val) in enumerate(result["distance"]):
-            athlete = self.athlete_repo.get(key)
-            distance_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {'{:.1f}'.format(val)} km\n"
+        result = self.__compute_top_3(weekly_activities)
 
         return {
-            "count": count_str,
-            "time": time_str,
-            "distance": distance_str,
+            "count": self.__compute_activities_str(result["activities"]),
+            "time": self.__compute_time_str(result["time"]),
+            "distance": self.__compute_distance_str(result["distance"]),
         }
 
     def compute_monthly_stats(self) -> dict:
@@ -190,27 +211,10 @@ class TomitaStrava:
 
         result = self.__compute_top_3(monthly_activities)
 
-        count_str = ""
-        time_str = ""
-        distance_str = ""
-
-        for idx, (key, val) in enumerate(result["activities"]):
-            athlete = self.athlete_repo.get(key)
-            count_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {val} activities\n"
-
-        for idx, (key, val) in enumerate(result["time"]):
-            athlete = self.athlete_repo.get(key)
-            time_str += (f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** "
-                         f"{self.convert_seconds_to_human_readable(val)}\n")
-
-        for idx, (key, val) in enumerate(result["distance"]):
-            athlete = self.athlete_repo.get(key)
-            distance_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {'{:.1f}'.format(val)} km\n"
-
         return {
-            "count": count_str,
-            "time": time_str,
-            "distance": distance_str,
+            "count": self.__compute_activities_str(result["activities"]),
+            "time": self.__compute_time_str(result["time"]),
+            "distance": self.__compute_distance_str(result["distance"]),
         }
 
     def compute_yearly_stats(self) -> dict:
@@ -223,27 +227,10 @@ class TomitaStrava:
 
         result = self.__compute_top_3(yearly_activities)
 
-        count_str = ""
-        time_str = ""
-        distance_str = ""
-
-        for idx, (key, val) in enumerate(result["activities"]):
-            athlete = self.athlete_repo.get(key)
-            count_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {val} activities\n"
-
-        for idx, (key, val) in enumerate(result["time"]):
-            athlete = self.athlete_repo.get(key)
-            time_str += (f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** "
-                         f"{self.convert_seconds_to_human_readable(val)}\n")
-
-        for idx, (key, val) in enumerate(result["distance"]):
-            athlete = self.athlete_repo.get(key)
-            distance_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {'{:.1f}'.format(val)} km\n"
-
         return {
-            "count": count_str,
-            "time": time_str,
-            "distance": distance_str,
+            "count": self.__compute_activities_str(result["activities"]),
+            "time": self.__compute_time_str(result["time"]),
+            "distance": self.__compute_distance_str(result["distance"]),
         }
 
     def sync_stats(self) -> List[Activity]:
