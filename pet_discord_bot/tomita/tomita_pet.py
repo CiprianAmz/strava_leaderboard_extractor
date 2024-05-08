@@ -1,11 +1,12 @@
-import asyncio
 import os
 import random
+from collections import deque
 from typing import List
 
 import psutil
 
-from discord import Intents, Embed, Message
+from discord import Embed, Message, Intents
+from discord.ext import tasks
 from humanfriendly import format_timespan
 
 from pet_discord_bot.types.activity import Activity
@@ -45,13 +46,15 @@ class TomitaBiciclistul(BotClient):
         self.owner_id = 279996271388000256  # Maurice
         self.commands_playful = ['!bobite', '!cacacios', '!pupic', '!sudo_pupic']
         self.commands_strava = [
+            '!strava_auth',
             '!strava_daily',
             '!strava_monthly',
             '!strava_stats',
             '!strava_sync',
+            '!strava_weekly',
             '!strava_yearly',
         ]
-        self.commands_health = ['!verifica_labutele', '!verifica_puful']
+        self.commands_health = ['!verifica_labutele', '!verifica_puful', '!verifica_logurile']
 
         self.strava = TomitaStrava(
             config_json=load_strava_config_from_json(
@@ -94,7 +97,12 @@ class TomitaBiciclistul(BotClient):
             if len(added_activities) == 0:
                 await channel.send('🥺 Nu am adăugat nicio activitate nouă în baza de date!')
             else:
+                await self.__send_new_activities(added_activities)
                 await channel.send(f'✅ Am adăugat {len(added_activities)} activități noi în baza de date!')
+
+        if message.content.startswith('!strava_auth'):
+            self.strava.refresh_access_token()
+            await channel.send('🔑 Lăbuțele mele sunt iar autorizate pe Strava!')
 
         if message.content.startswith('!strava_daily'):
             daily_stats = self.strava.compute_daily_stats()
@@ -102,6 +110,14 @@ class TomitaBiciclistul(BotClient):
             embedded_message.add_field(name="Numar de activități", value=daily_stats["count"], inline=False)
             embedded_message.add_field(name="Timp total", value=daily_stats["time"], inline=False)
             embedded_message.add_field(name="Distanță totală", value=daily_stats["distance"], inline=False)
+            await channel.send(embed=embedded_message)
+
+        if message.content.startswith('!strava_weekly'):
+            weekly_stats = self.strava.compute_weekly_stats()
+            embedded_message = Embed(title="Weekly Stats", description="Statisticile săptămânale", color=0x00ff00)
+            embedded_message.add_field(name="Numar de activități", value=weekly_stats["count"], inline=False)
+            embedded_message.add_field(name="Timp total", value=weekly_stats["time"], inline=False)
+            embedded_message.add_field(name="Distanță totală", value=weekly_stats["distance"], inline=False)
             await channel.send(embed=embedded_message)
 
         if message.content.startswith('!strava_monthly'):
@@ -135,7 +151,18 @@ class TomitaBiciclistul(BotClient):
             hdd_total = hdd.total / (2 ** 30)
             hdd_used = hdd.used / (2 ** 30)
             hdd_free = hdd.free / (2 ** 30)
-            await message.channel.send(f'💾: {hdd_used:.2f}GB / {hdd_total:.2f}GB | 🎉 Liber: {hdd_free:.2f}GB')
+            await message.channel.send(f'💾: {hdd_used:.1f}GB / {hdd_total:.1f}GB | 🎉 Liber: {hdd_free:.1f}GB')
+
+        if message.content.startswith('!verifica_logurile'):
+            await message.reply('🔦 Se verifică logurile!', mention_author=True)
+            file_name = os.path.join(os.path.dirname(__file__), '../../nohup.out')
+            with open(file_name, 'r') as file:
+                last_15_lines = deque(file, 15)
+            discord_logs = ""
+            for line in last_15_lines:
+                discord_logs += line
+            print(discord_logs)
+            await message.channel.send(f'```\n{discord_logs}\n```')
 
     async def __send_startup_message(self, t_activities: int, t_athletes: int) -> None:
         channel = self.get_channel(discord_channel_name_to_id['bot_home'])
@@ -154,14 +181,15 @@ class TomitaBiciclistul(BotClient):
             athlete: Athlete = self.athlete_repository.get(activity.athlete_id)
             await channel.send(
                 f"<@{athlete.discord_id}> a adăugat o nouă activitate **{activity.name}** pe Strava!\n"
-                f"| {strava_activity_to_emoji(activity.type)} **Tip:** {activity.type} "
-                f"| 🕒 **Timp:** {format_timespan(activity.time)} "
+                f"| {strava_activity_to_emoji.get(activity.type, '❓')} **Tip:** {activity.type} "
+                f"| 🕒 **Timp:** {self.strava.convert_seconds_to_human_readable(activity.time)} "
                 f"| 🛣️ **Distanță:** {activity.distance} km")
 
-    def __fetch_new_activities(self) -> None:
+    @tasks.loop(minutes=10)
+    async def fetch_new_activities(self) -> None:
         tomi_logger.info("Fetching new activities from Strava...")
         new_activities = self.strava.sync_stats()
-        asyncio.run(self.__send_new_activities(new_activities))
+        await self.__send_new_activities(new_activities)
         tomi_logger.info(f"Sent {len(new_activities)} new activities to Discord")
 
     async def on_ready(self):
@@ -175,6 +203,7 @@ class TomitaBiciclistul(BotClient):
         tomi_logger.info('------')
 
         await self.__send_startup_message(len(activities), len(athletes))
+        self.fetch_new_activities.start()
 
     async def on_message(self, message):
         # We do not want the bot to reply to itself

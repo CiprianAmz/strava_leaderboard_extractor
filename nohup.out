@@ -1,0 +1,4 @@
+discord.client: logging in using static token
+discord.gateway: Shard ID None has connected to Gateway (Session ID: 50f321812447f675b14a424db547b981).
+2024-05-06 12:11:40,618 - pet_discord_bot.utils.logs - INFO - Fetching new activities from Strava...
+2024-05-06 12:11:43,785 - pet_discord_bot.utils.logs - INFO - Sent 0 new activities to Discord

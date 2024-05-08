@@ -4,10 +4,13 @@ from dataclasses import dataclass
 
 
 @dataclass
-class StravaConfig():
+class StravaConfig:
     access_token: str
-    club_id: str
     activities_limit: Optional[int]
+    client_id: int
+    client_secret: str
+    club_id: int
+    refresh_token: str
 
 
 def load_strava_config_from_json(file_path: str) -> StravaConfig:
@@ -15,6 +18,9 @@ def load_strava_config_from_json(file_path: str) -> StravaConfig:
         config_json = dict(json.load(f))
         return StravaConfig(
             access_token=config_json["strava_access_token"],
-            club_id=config_json["strava_club_id"],
             activities_limit=config_json.get("activities_limit", None),
+            client_id=int(config_json["strava_client_id"]),
+            client_secret=config_json["strava_client_secret"],
+            club_id=int(config_json["strava_club_id"]),
+            refresh_token=config_json.get("strava_refresh_token", None),
         )

@@ -44,3 +44,13 @@ strava_activity_to_emoji = {
     'Workout': '🏋️',
     'Yoga': '🧘',
 }
+
+time_unit_to_short = {
+    ' days': 'd',
+    ' day': 'd',
+    ' hours': 'h',
+    ' hour': 'h',
+    ' minutes': 'm',
+    ' minute': 'm',
+    ' seconds': 's',
+}

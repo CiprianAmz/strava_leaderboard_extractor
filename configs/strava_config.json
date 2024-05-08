@@ -1,5 +1,8 @@
 {
     "activities_limit": 162,
     "strava_access_token": "<INSERT_ACCESS_TOKEN>",
-    "strava_club_id": "<INSERT_CLUB_ID>"
+    "strava_client_id": "<INSERT_CLIENT_ID>",
+    "strava_client_secret": "<INSERT_CLIENT_SECRET>",
+    "strava_club_id": "<INSERT_CLUB_ID>",
+    "strava_refresh_token": "<INSERT_REFRESH_TOKEN>"
 }

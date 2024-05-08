@@ -21,5 +21,7 @@ class ActivityRepository:
         self.client.upsert(db_table=self.db_table, internal_id=activity.internal_id, data=activity.__dict__)
 
     def get_by_time_and_distance(self, time: int, distance: float) -> Activity or None:
-        return next(
-            (activity for activity in self.activities if activity.time == time and activity.distance == distance), None)
+        for activity in self.activities:
+            if activity.time == time and round(activity.distance, 1) == round(distance, 1):
+                return activity
+        return None
