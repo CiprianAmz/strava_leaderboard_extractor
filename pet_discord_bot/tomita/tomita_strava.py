@@ -115,6 +115,23 @@ class TomitaStrava:
         formatted_time = formatted_time.replace(", ",  " ")
         return formatted_time
 
+    def compute_athlete_stats(self, firstname: str, lastname: str) -> dict:
+        athlete = self.athlete_repo.get_by_name(firstname, lastname)
+        if athlete is None:
+            return {
+                "found": False
+            }
+
+        athlete_activities = [activity for activity in self.activity_repo.fetch_all() if activity.athlete_id == athlete.internal_id]
+        result = self.__compute_top_3(athlete_activities)
+        return {
+            "found": True,
+            "count": result["activities"][0][1],
+            "time": self.convert_seconds_to_human_readable(result["time"][0][1]),
+            "distance": "{:.1f} km".format(result["distance"][0][1]),
+        }
+
+
     def refresh_access_token(self) -> None:
         access_info = self.strava_client.refresh_access_token(
             client_id=self.strava_config.client_id,
