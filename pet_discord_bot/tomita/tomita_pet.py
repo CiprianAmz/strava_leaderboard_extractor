@@ -43,8 +43,9 @@ class TomitaBiciclistul(BotClient):
 
         self.bobite_replies = get_replies('bobite.txt')
         self.caca_replies = get_replies('cacacios.txt')
+        self.sticks_replies = get_replies('sticks.txt')
         self.owner_id = 279996271388000256  # Maurice
-        self.commands_playful = ['!bobite', '!cacacios', '!pupic', '!sudo_pupic']
+        self.commands_playful = ['!bobite', '!cacacios', '!pupic', '!sudo_pupic', '!sticks']
         self.commands_strava = [
             '!strava_auth',
             '!strava_daily',
@@ -70,6 +71,10 @@ class TomitaBiciclistul(BotClient):
 
         if message.content.startswith('!cacacios'):
             random_reply = random.choice(self.caca_replies)
+            await message.reply(random_reply, mention_author=True)
+
+        if message.content.startswith('!sticks'):
+            random_reply = random.choice(self.sticks_replies)
             await message.reply(random_reply, mention_author=True)
 
         if message.content.startswith('!sudo_pupic'):
