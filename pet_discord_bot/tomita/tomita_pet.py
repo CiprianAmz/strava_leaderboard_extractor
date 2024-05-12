@@ -43,9 +43,11 @@ class TomitaBiciclistul(BotClient):
 
         self.bobite_replies = get_replies('bobite.txt')
         self.caca_replies = get_replies('cacacios.txt')
+        self.sticks_replies = get_replies('sticks.txt')
         self.owner_id = 279996271388000256  # Maurice
-        self.commands_playful = ['!bobite', '!cacacios', '!pupic', '!sudo_pupic']
+        self.commands_playful = ['!bobite', '!cacacios', '!pupic', '!sudo_pupic', '!sticks']
         self.commands_strava = [
+            '!strava_athlete',
             '!strava_auth',
             '!strava_daily',
             '!strava_monthly',
@@ -70,6 +72,10 @@ class TomitaBiciclistul(BotClient):
 
         if message.content.startswith('!cacacios'):
             random_reply = random.choice(self.caca_replies)
+            await message.reply(random_reply, mention_author=True)
+
+        if message.content.startswith('!sticks'):
+            random_reply = random.choice(self.sticks_replies)
             await message.reply(random_reply, mention_author=True)
 
         if message.content.startswith('!sudo_pupic'):
@@ -103,6 +109,20 @@ class TomitaBiciclistul(BotClient):
         if message.content.startswith('!strava_auth'):
             self.strava.refresh_access_token()
             await channel.send('🔑 Lăbuțele mele sunt iar autorizate pe Strava!')
+
+        if message.content.startswith('!strava_athlete'):
+            firstname = message.content.split(' ')[1]
+            lastname = message.content.split(' ')[2]
+            strava_stats = self.strava.compute_athlete_stats(firstname, lastname)
+            if strava_stats is None:
+                await channel.send(f'❌ Nu am găsit sportivul cu numele {firstname} {lastname}!')
+                return
+
+            embedded_message = Embed(title=f"{firstname} Stats", description="Statisticile sportivului", color=0x00ff00)
+            embedded_message.add_field(name="Activități totale", value=strava_stats["count"], inline=False)
+            embedded_message.add_field(name="Timp total", value=strava_stats["time"], inline=False)
+            embedded_message.add_field(name="Distanță totală", value=strava_stats["distance"], inline=False)
+            await channel.send(embed=embedded_message)
 
         if message.content.startswith('!strava_daily'):
             daily_stats = self.strava.compute_daily_stats()
@@ -215,7 +235,8 @@ class TomitaBiciclistul(BotClient):
 
         # Add logs to playful and strava commands
         if message.content.startswith(tuple(self.commands_playful +
-                                            self.commands_strava)):
+                                            self.commands_strava +
+                                            self.commands_health)):
             tomi_logger.info(f"Received command: {message.content} from {message.author} "
                              f"(id: {message.author.id}) on channel {message.channel} "
                              f"(id: {message.channel.id})")
