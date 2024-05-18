@@ -1,11 +1,12 @@
 import os
 import random
 from collections import deque
+from datetime import datetime
 from typing import List
 
 import psutil
 
-from discord import Embed, Message, Intents
+from discord import Embed, Message, Intents, File
 from discord.ext import tasks
 from humanfriendly import format_timespan
 
@@ -32,20 +33,22 @@ def get_replies(file_name):
 class TomitaBiciclistul(BotClient):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        firebase_client = FirebaseClient(
+        self.firebase_client = FirebaseClient(
             db_url=load_bot_config_from_json(
                 os.path.join(os.path.dirname(__file__), '../../configs/discord_bot_config.json')
             ).firebase_url,
             credential_path=os.path.join(os.path.dirname(__file__), '../../configs/firebase_config.json')
         )
-        self.athlete_repository = AthleteRepository(client=firebase_client)
-        self.activity_repository = ActivityRepository(client=firebase_client)
+        self.athlete_repository = AthleteRepository(client=self.firebase_client)
+        self.activity_repository = ActivityRepository(client=self.firebase_client)
 
         self.bobite_replies = get_replies('bobite.txt')
         self.caca_replies = get_replies('cacacios.txt')
+        self.sticks_replies = get_replies('sticks.txt')
         self.owner_id = 279996271388000256  # Maurice
-        self.commands_playful = ['!bobite', '!cacacios', '!pupic', '!sudo_pupic']
+        self.commands_playful = ['!bobite', '!cacacios', '!pupic', '!sudo_pupic', '!sticks']
         self.commands_strava = [
+            '!strava_athlete',
             '!strava_auth',
             '!strava_daily',
             '!strava_monthly',
@@ -54,7 +57,7 @@ class TomitaBiciclistul(BotClient):
             '!strava_weekly',
             '!strava_yearly',
         ]
-        self.commands_health = ['!verifica_labutele', '!verifica_puful', '!verifica_logurile']
+        self.commands_health = ['!verifica_labutele', '!verifica_puful', '!verifica_logurile', '!descarca_blanosul']
 
         self.strava = TomitaStrava(
             config_json=load_strava_config_from_json(
@@ -70,6 +73,10 @@ class TomitaBiciclistul(BotClient):
 
         if message.content.startswith('!cacacios'):
             random_reply = random.choice(self.caca_replies)
+            await message.reply(random_reply, mention_author=True)
+
+        if message.content.startswith('!sticks'):
+            random_reply = random.choice(self.sticks_replies)
             await message.reply(random_reply, mention_author=True)
 
         if message.content.startswith('!sudo_pupic'):
@@ -104,6 +111,20 @@ class TomitaBiciclistul(BotClient):
             self.strava.refresh_access_token()
             await channel.send('🔑 Lăbuțele mele sunt iar autorizate pe Strava!')
 
+        if message.content.startswith('!strava_athlete'):
+            firstname = message.content.split(' ')[1]
+            lastname = message.content.split(' ')[2]
+            strava_stats = self.strava.compute_athlete_stats(firstname, lastname)
+            if strava_stats is None:
+                await channel.send(f'❌ Nu am găsit sportivul cu numele {firstname} {lastname}!')
+                return
+
+            embedded_message = Embed(title=f"{firstname} Stats", description="Statisticile sportivului", color=0x00ff00)
+            embedded_message.add_field(name="Activități totale", value=strava_stats["count"], inline=False)
+            embedded_message.add_field(name="Timp total", value=strava_stats["time"], inline=False)
+            embedded_message.add_field(name="Distanță totală", value=strava_stats["distance"], inline=False)
+            await channel.send(embed=embedded_message)
+
         if message.content.startswith('!strava_daily'):
             daily_stats = self.strava.compute_daily_stats()
             embedded_message = Embed(title="Daily Stats", description="Statisticile zilnice", color=0x00ff00)
@@ -136,8 +157,7 @@ class TomitaBiciclistul(BotClient):
             embedded_message.add_field(name="Distanță totală", value=yearly_stats["distance"], inline=False)
             await channel.send(embed=embedded_message)
 
-    @staticmethod
-    async def __health_commands(message: Message) -> None:
+    async def __health_commands(self, message: Message) -> None:
         if message.content.startswith('!verifica_labutele'):
             await message.reply('🏥 Doctorul verifică labuțele!', mention_author=True)
             cpu_usage = psutil.cpu_percent()
@@ -163,6 +183,18 @@ class TomitaBiciclistul(BotClient):
                 discord_logs += line
             print(discord_logs)
             await message.channel.send(f'```\n{discord_logs}\n```')
+
+        if message.content.startswith('!descarca_blanosul'):
+            start_time = datetime.now()
+            await message.reply('📥 Se descarcă blănosul!', mention_author=True)
+            backup_name = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + "_backup.json"
+            backup_path = os.path.join(os.path.dirname(__file__), '../backups', backup_name)
+            self.firebase_client.backup_to_json(backup_path)
+            await message.channel.send(f'📦 Backup-ul a fost salvat cu numele: {backup_name}')
+            await message.channel.send(f'🔢 Size: {os.path.getsize(backup_path) / (2 ** 20):.2f} MB')
+            await message.channel.send(f'🕛 Durata: {format_timespan(datetime.now() - start_time)}')
+            await message.channel.send(file=File(backup_path))
+
 
     async def __send_startup_message(self, t_activities: int, t_athletes: int) -> None:
         channel = self.get_channel(discord_channel_name_to_id['bot_home'])
@@ -215,7 +247,8 @@ class TomitaBiciclistul(BotClient):
 
         # Add logs to playful and strava commands
         if message.content.startswith(tuple(self.commands_playful +
-                                            self.commands_strava)):
+                                            self.commands_strava +
+                                            self.commands_health)):
             tomi_logger.info(f"Received command: {message.content} from {message.author} "
                              f"(id: {message.author.id}) on channel {message.channel} "
                              f"(id: {message.channel.id})")

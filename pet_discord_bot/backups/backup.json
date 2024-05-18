@@ -1,0 +1,21 @@
+{
+    "activities": {
+        "01170d7e-855f-4d14-bfd9-8d65d2a5d7aa": {
+            "athlete_id": "<ATHLETE_ID>",
+            "date": "<DATE>",
+            "distance": 0,
+            "internal_id": "<INTERNAL_ID>",
+            "name": "<NAME>",
+            "time": 0,
+            "type": "<TYPE>"
+        }
+    },
+    "athletes": {
+        "1e567e3a-9402-41f8-ad32-2127fe5a0579": {
+            "discord_id": "<DISCORD_ID>",
+            "first_name": "<FIRST_NAME>",
+            "internal_id": "<INTERNAL_ID>",
+            "last_name": "<LAST_NAME>"
+        }
+    }
+}

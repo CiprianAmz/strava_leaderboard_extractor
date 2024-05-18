@@ -1,3 +1,5 @@
+import json
+
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
@@ -24,6 +26,13 @@ class FirebaseClient:
     def delete(db_table: str, internal_id: str) -> None:
         """Deletes an entity from Firebase."""
         db.reference("/" + db_table).child(internal_id).delete()
+
+    @staticmethod
+    def backup_to_json(output_file: str) -> None:
+        """Downloads the entire Firebase database as a .json backup file."""
+        data = db.reference("/").get()
+        with open(output_file, 'w') as json_file:
+            json.dump(data, json_file, indent=4)
 
     def close(self):
         """Cleanly closes the Firebase app."""
