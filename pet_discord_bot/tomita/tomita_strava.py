@@ -88,7 +88,8 @@ class TomitaStrava:
         activities_str = ""
         for idx, (key, val) in enumerate(activities_list):
             athlete = self.athlete_repo.get(key)
-            activities_str += f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:** {val}\n"
+            activities_str += (f"**{self.__get_medal_for_idx(idx)} {athlete.first_name} {athlete.last_name}:"
+                               f"** {self.__replace_activity_type_name(val)}\n")
         return activities_str
 
     def __compute_time_str(self, activities_list: List[Activity]) -> str:
