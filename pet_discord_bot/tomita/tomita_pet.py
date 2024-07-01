@@ -211,11 +211,16 @@ class TomitaBiciclistul(BotClient):
         channel = self.get_channel(discord_channel_name_to_id['sportivii'])
         for activity in activities:
             athlete: Athlete = self.athlete_repository.get(activity.athlete_id)
-            await channel.send(
-                f"<@{athlete.discord_id}> a adăugat o nouă activitate **{activity.name}** pe Strava!\n"
-                f"| {strava_activity_to_emoji.get(activity.type, '❓')} **Tip:** {activity.type} "
-                f"| 🕒 **Timp:** {self.strava.convert_seconds_to_human_readable(activity.time)} "
-                f"| 🛣️ **Distanță:** {activity.distance} km")
+            if activity.error is None:
+                await channel.send(
+                    f"<@{athlete.discord_id}> a adăugat o nouă activitate **{activity.name}** pe Strava!\n"
+                    f"| {strava_activity_to_emoji.get(activity.type, '❓')} **Tip:** {activity.type} "
+                    f"| 🕒 **Timp:** {self.strava.convert_seconds_to_human_readable(activity.time)} "
+                    f"| 🛣️ **Distanță:** {activity.distance} km")
+            else:
+                await channel.send(
+                    f"🚨 <@{athlete.discord_id}> a încălcat regulile Murlock și nu a putut adăuga activitatea **{activity.name}**!\n"
+                    f"**{activity.error}**")
 
     @tasks.loop(minutes=10)
     async def fetch_new_activities(self) -> None:
