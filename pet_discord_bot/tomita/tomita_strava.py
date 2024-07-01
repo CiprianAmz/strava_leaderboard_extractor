@@ -281,7 +281,7 @@ class TomitaStrava:
                 type=str(activity.type),
             )
             existing_activity = self.activity_repo.get_by_time_and_distance(new_activity.time, new_activity.distance)
-            if speed_in_kmh > 90:
+            if existing_activity is None and speed_in_kmh > 90:
                 tomi_logger.error(f"Activity {activity.name} ({activity.athlete.firstname} "
                                   f"{activity.athlete.lastname}) will be skipped due to speed of {formatted_speed}")
                 new_activity.error = f"Speed of {formatted_speed} km/h"
