@@ -154,15 +154,15 @@ class TomitaStrava:
         activity_time_dict = {}
         activity_distance_dict = {}
         for activity in self.activity_repo.fetch_all():
-            if activity.type not in activity_dict:
+            if activity.type not in activity_dict and activity.error is None:
                 activity_dict.update({activity.type: 0})
             activity_dict[activity.type] += 1
 
-            if activity.type not in activity_time_dict:
+            if activity.type not in activity_time_dict and activity.error is None:
                 activity_time_dict.update({activity.type: 0})
             activity_time_dict[activity.type] += activity.time
 
-            if activity.type not in activity_distance_dict:
+            if activity.type not in activity_distance_dict and activity.error is None:
                 activity_distance_dict.update({activity.type: 0})
             activity_distance_dict[activity.type] += activity.distance
 
@@ -192,7 +192,7 @@ class TomitaStrava:
     def compute_daily_stats(self) -> dict:
         daily_activities: List[Activity] = []
         for activity in self.activity_repo.fetch_all():
-            if activity.date is not None:
+            if activity.date is not None and activity.error is None:
                 activity_date = self.__convert_str_date_to_datetime(activity.date)
                 if activity_date.date() == datetime.now().date():
                     daily_activities.append(activity)
@@ -208,7 +208,7 @@ class TomitaStrava:
     def compute_weekly_stats(self) -> dict:
         weekly_activities: List[Activity] = []
         for activity in self.activity_repo.fetch_all():
-            if activity.date is not None:
+            if activity.date is not None and activity.error is None:
                 activity_date = self.__convert_str_date_to_datetime(activity.date)
                 if activity_date.isocalendar()[1] == datetime.now().isocalendar()[1]:
                     weekly_activities.append(activity)
@@ -224,7 +224,7 @@ class TomitaStrava:
     def compute_monthly_stats(self) -> dict:
         monthly_activities: List[Activity] = []
         for activity in self.activity_repo.fetch_all():
-            if activity.date is not None:
+            if activity.date is not None and activity.error is None:
                 activity_date = self.__convert_str_date_to_datetime(activity.date)
                 if activity_date.month == datetime.now().month:
                     monthly_activities.append(activity)
@@ -240,7 +240,7 @@ class TomitaStrava:
     def compute_yearly_stats(self) -> dict:
         yearly_activities: List[Activity] = []
         for activity in self.activity_repo.fetch_all():
-            if activity.date is not None:
+            if activity.date is not None and activity.error is None:
                 activity_date = self.__convert_str_date_to_datetime(activity.date)
                 if activity_date.year == datetime.now().year:
                     yearly_activities.append(activity)
@@ -271,7 +271,7 @@ class TomitaStrava:
             formatted_speed = float("{:.1f}".format(speed_in_kmh))
             new_activity = Activity(
                 athlete_id=athlete.internal_id,
-                date=None,
+                date=datetime.now().strftime("%Y-%m-%d %H:%M"),
                 distance=distance_in_km,
                 internal_id=str(uuid.uuid4()),
                 name=activity.name,
@@ -286,11 +286,11 @@ class TomitaStrava:
                                   f"{activity.athlete.lastname}) will be skipped due to speed of {formatted_speed}")
                 new_activity.error = f"Speed of {formatted_speed} km/h"
                 activities_added.append(new_activity)
+                self.activity_repo.add(new_activity)
 
             if (existing_activity is None
                     and (new_activity.distance > 0.00 or new_activity.time > 0)
                     and new_activity.error is None):
-                new_activity.date = datetime.now().strftime("%Y-%m-%d %H:%M")
                 self.activity_repo.add(new_activity)
                 activities_added.append(new_activity)
 
