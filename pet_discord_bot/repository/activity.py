@@ -9,7 +9,8 @@ class ActivityRepository:
 
         firebase_activities = self.client.fetch_all(self.db_table)
         if firebase_activities:
-            self.activities = [Activity(**activity) for activity in firebase_activities.values()]
+            self.activities = [Activity(**{**activity, 'speed': activity.get('speed', 0.0), 'error': activity.get('error', None)}) for activity in
+                               firebase_activities.values()]
         else:
             self.activities = []
 

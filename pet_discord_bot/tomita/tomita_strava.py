@@ -74,9 +74,11 @@ class TomitaStrava:
             athlete_stats_by_time_dict[athlete.internal_id] += activity.time
             athlete_stats_by_distance_dict[athlete.internal_id] += activity.distance
 
-        top_3_by_activities_list = sorted(athlete_stats_by_number_dict.items(), key=lambda item: item[1], reverse=True)[:3]
+        top_3_by_activities_list = sorted(athlete_stats_by_number_dict.items(), key=lambda item: item[1], reverse=True)[
+                                   :3]
         top_3_by_time_list = sorted(athlete_stats_by_time_dict.items(), key=lambda item: item[1], reverse=True)[:3]
-        top_3_by_distance_list = sorted(athlete_stats_by_distance_dict.items(), key=lambda item: item[1], reverse=True)[:3]
+        top_3_by_distance_list = sorted(athlete_stats_by_distance_dict.items(), key=lambda item: item[1], reverse=True)[
+                                 :3]
 
         return {
             "activities": top_3_by_activities_list,
@@ -112,8 +114,8 @@ class TomitaStrava:
         formatted_time = format_timespan(seconds)
         for key, val in time_unit_to_short.items():
             formatted_time = formatted_time.replace(key, val)
-        formatted_time = formatted_time.replace(" and ",  " ")
-        formatted_time = formatted_time.replace(", ",  " ")
+        formatted_time = formatted_time.replace(" and ", " ")
+        formatted_time = formatted_time.replace(", ", " ")
         return formatted_time
 
     def compute_athlete_stats(self, firstname: str, lastname: str) -> dict:
@@ -123,7 +125,8 @@ class TomitaStrava:
                 "found": False
             }
 
-        athlete_activities = [activity for activity in self.activity_repo.fetch_all() if activity.athlete_id == athlete.internal_id]
+        athlete_activities = [activity for activity in self.activity_repo.fetch_all() if
+                              activity.athlete_id == athlete.internal_id]
         result = self.__compute_top_3(athlete_activities)
         return {
             "found": True,
@@ -131,7 +134,6 @@ class TomitaStrava:
             "time": self.convert_seconds_to_human_readable(result["time"][0][1]),
             "distance": "{:.1f} km".format(result["distance"][0][1]),
         }
-
 
     def refresh_access_token(self) -> None:
         access_info = self.strava_client.refresh_access_token(
@@ -152,15 +154,15 @@ class TomitaStrava:
         activity_time_dict = {}
         activity_distance_dict = {}
         for activity in self.activity_repo.fetch_all():
-            if activity.type not in activity_dict:
+            if activity.type not in activity_dict and activity.error is None:
                 activity_dict.update({activity.type: 0})
             activity_dict[activity.type] += 1
 
-            if activity.type not in activity_time_dict:
+            if activity.type not in activity_time_dict and activity.error is None:
                 activity_time_dict.update({activity.type: 0})
             activity_time_dict[activity.type] += activity.time
 
-            if activity.type not in activity_distance_dict:
+            if activity.type not in activity_distance_dict and activity.error is None:
                 activity_distance_dict.update({activity.type: 0})
             activity_distance_dict[activity.type] += activity.distance
 
@@ -190,7 +192,7 @@ class TomitaStrava:
     def compute_daily_stats(self) -> dict:
         daily_activities: List[Activity] = []
         for activity in self.activity_repo.fetch_all():
-            if activity.date is not None:
+            if activity.date is not None and activity.error is None:
                 activity_date = self.__convert_str_date_to_datetime(activity.date)
                 if activity_date.date() == datetime.now().date():
                     daily_activities.append(activity)
@@ -206,7 +208,7 @@ class TomitaStrava:
     def compute_weekly_stats(self) -> dict:
         weekly_activities: List[Activity] = []
         for activity in self.activity_repo.fetch_all():
-            if activity.date is not None:
+            if activity.date is not None and activity.error is None:
                 activity_date = self.__convert_str_date_to_datetime(activity.date)
                 if activity_date.isocalendar()[1] == datetime.now().isocalendar()[1]:
                     weekly_activities.append(activity)
@@ -222,7 +224,7 @@ class TomitaStrava:
     def compute_monthly_stats(self) -> dict:
         monthly_activities: List[Activity] = []
         for activity in self.activity_repo.fetch_all():
-            if activity.date is not None:
+            if activity.date is not None and activity.error is None:
                 activity_date = self.__convert_str_date_to_datetime(activity.date)
                 if activity_date.month == datetime.now().month:
                     monthly_activities.append(activity)
@@ -238,7 +240,7 @@ class TomitaStrava:
     def compute_yearly_stats(self) -> dict:
         yearly_activities: List[Activity] = []
         for activity in self.activity_repo.fetch_all():
-            if activity.date is not None:
+            if activity.date is not None and activity.error is None:
                 activity_date = self.__convert_str_date_to_datetime(activity.date)
                 if activity_date.year == datetime.now().year:
                     yearly_activities.append(activity)
@@ -263,18 +265,32 @@ class TomitaStrava:
                                   f"{activity.athlete.lastname}) will be skipped")
                 continue
 
+            distance_in_km = float("{:.1f}".format(activity.distance.num / 1000))
+            time_in_seconds = int(activity.moving_time.total_seconds())
+            speed_in_kmh = distance_in_km / (time_in_seconds / 3600)
+            formatted_speed = float("{:.1f}".format(speed_in_kmh))
             new_activity = Activity(
                 athlete_id=athlete.internal_id,
-                date=None,
-                distance=float("{:.1f}".format(activity.distance.num / 1000)),
+                date=datetime.now().strftime("%Y-%m-%d %H:%M"),
+                distance=distance_in_km,
                 internal_id=str(uuid.uuid4()),
                 name=activity.name,
-                time=int(activity.moving_time.total_seconds()),
+                time=time_in_seconds,
+                error=None,
+                speed=formatted_speed,
                 type=str(activity.type),
             )
             existing_activity = self.activity_repo.get_by_time_and_distance(new_activity.time, new_activity.distance)
-            if existing_activity is None and (new_activity.distance > 0.00 or new_activity.time > 0):
-                new_activity.date = datetime.now().strftime("%Y-%m-%d %H:%M")
+            if existing_activity is None and speed_in_kmh > 90:
+                tomi_logger.error(f"Activity {activity.name} ({activity.athlete.firstname} "
+                                  f"{activity.athlete.lastname}) will be skipped due to speed of {formatted_speed}")
+                new_activity.error = f"Speed of {formatted_speed} km/h"
+                activities_added.append(new_activity)
+                self.activity_repo.add(new_activity)
+
+            if (existing_activity is None
+                    and (new_activity.distance > 0.00 or new_activity.time > 0)
+                    and new_activity.error is None):
                 self.activity_repo.add(new_activity)
                 activities_added.append(new_activity)
 
